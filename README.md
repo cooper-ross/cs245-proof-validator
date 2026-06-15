@@ -1,5 +1,8 @@
 # CS245 Proof Validator
 
+<img width="1869" height="1336" alt="image" src="https://github.com/user-attachments/assets/1b6cf640-b5a1-4031-a0cd-dae655951522" />
+
+
 A browser-based proof editor and validator for the propositional natural deduction system from the [CS245E](https://cs.uwaterloo.ca/~eblais/cs245e/f25/pl-formalproofs) lecture notes by Eric Blais at the University of Waterloo. Either paste in a proof, or enter it manually, and then click to validate it. The checker verifies the proof you give it syntactically, so if it passes your proof is correct! 
 
 ## Editor controls
