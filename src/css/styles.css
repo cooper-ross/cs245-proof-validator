@@ -1,0 +1,272 @@
+body {
+  font-family: "Helvetica Neue", sans-serif;
+  font-weight: 500;
+  margin: 1.5rem auto;
+  max-width: 1000px;
+  padding: 0 1rem;
+  line-height: 1.4;
+  color: #1a1a1a;
+}
+
+h1 {
+  font-size: 1.4rem;
+}
+
+.sub,
+.implicit-note {
+  color: #555;
+}
+
+.sub {
+  margin-top: -0.5rem;
+}
+
+.top {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.field {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.field.narrow {
+  flex: 0 0 220px;
+}
+
+.implicit-note {
+  flex: 1;
+  min-width: 240px;
+  margin: 1.4rem 0 0;
+  font-size: 0.85rem;
+}
+
+.field :is(input, textarea) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.editor,
+.latex-preview {
+  position: relative;
+  border: 1px solid #bbb;
+  padding: 0.4rem 0.4rem 0.4rem 0;
+  overflow-x: auto;
+}
+
+.editor,
+.result,
+:is(textarea, input, select) {
+  font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+}
+
+.editor {
+  margin-top: 0.2rem;
+  background: #fafafa;
+}
+
+.prow,
+.lp-row {
+  display: flex;
+  position: relative;
+}
+
+.prow {
+  align-items: stretch;
+  min-height: 1.9rem;
+}
+
+.lp-row {
+  align-items: center;
+  min-height: 2rem;
+}
+
+.prow .gutter,
+.lp-gutter {
+  flex: 0 0 2.4rem;
+  text-align: right;
+  padding-right: 0.6rem;
+  color: #999;
+  font-size: 0.85rem;
+  user-select: none;
+}
+
+.prow .gutter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.prow .spacer,
+.lp-spacer {
+  flex: 0 0 auto;
+}
+
+.bracket {
+  position: absolute;
+  border: 1.5px solid #7a8290;
+  border-right: none;
+  width: 5px;
+  pointer-events: none;
+}
+
+.prow :is(.formula, .rule) {
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.prow .formula,
+.lp-formula {
+  flex: 1 1 auto;
+  min-width: 6rem;
+  padding: 0.15rem 0.4rem;
+  margin: 0.1rem 0 0.1rem 0.3rem;
+}
+
+.prow .formula {
+  font-size: 0.98rem;
+  border-radius: 4px;
+}
+
+.prow .rule,
+.lp-rule {
+  flex: 0 0 11rem;
+  text-align: right;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  padding: 0.15rem 0.4rem;
+  margin: 0.1rem 0.2rem;
+}
+
+.prow :is(.formula, .rule):focus {
+  outline: none;
+  background: #fff;
+  border-color: #93c5fd;
+}
+
+.prow .rule.as,
+.lp-rule.as {
+  color: #9333ea;
+  font-style: italic;
+}
+
+.prow.errline,
+.result.bad {
+  background: #fee2e2;
+}
+
+.prow.errline .gutter,
+.fail {
+  color: #dc2626;
+}
+
+:is(textarea, input, select) {
+  font-size: 0.95rem;
+  padding: 0.4rem;
+  margin-top: 0.2rem;
+  border: 1px solid #bbb;
+  border-radius: 0;
+}
+
+textarea {
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+
+.actions {
+  margin: 1rem 0;
+}
+
+.actions button,
+#copy-latex {
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: #f2f2f2;
+}
+
+.actions button {
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+#copy-latex {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.result {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+}
+
+.result.ok,
+.result.bad {
+  border: 1px solid;
+}
+
+.result.ok,
+#copy-latex.copied {
+  background: #dcfce7;
+  border-color: #16a34a;
+}
+
+.result.bad {
+  border-color: #dc2626;
+}
+
+.help {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.help table {
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.help td {
+  border: 1px solid #ddd;
+  padding: 0.2rem 0.6rem;
+}
+
+.help td:first-child {
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+code {
+  background: #f0f0f0;
+  padding: 0 0.2rem;
+  border-radius: 3px;
+}
+
+.testrow { padding: 0.15rem 0; }
+.pass { color: #16a34a; }
+.fail { font-weight: 700; }
+
+.latex-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.latex-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #444;
+}
+
+.lp-formula .katex { font-size: 1.05em; }
+.lp-rule .katex { font-size: 0.95em; }
