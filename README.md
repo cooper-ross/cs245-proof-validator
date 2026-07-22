@@ -6,8 +6,8 @@ A browser-based proof editor and validator for the natural deduction systems fro
 
 Two proof systems are supported, switched with the toggle above the editor:
 
-- **Propositional** — the system from [Formal Proofs](https://cs.uwaterloo.ca/~eblais/cs245e/f25/pl-formalproofs) (lecture 5).
-- **First-Order** — the extension from [Formal Proofs in First-Order Logic](https://cs.uwaterloo.ca/~eblais/cs245e/f25/fol-formalproofs) (lecture 12), which adds predicates, quantifiers, and identity on top of all the propositional rules.
+- **Propositional:** the system from [Formal Proofs](https://cs.uwaterloo.ca/~eblais/cs245e/f25/pl-formalproofs) (Lecture 5).
+- **First-Order:** the extension from [Formal Proofs in First-Order Logic](https://cs.uwaterloo.ca/~eblais/cs245e/f25/fol-formalproofs) (Lecture 12), which adds predicates, quantifiers, and identity on top of all the propositional rules.
 
 ## Editor controls
 
