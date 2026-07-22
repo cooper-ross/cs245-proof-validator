@@ -104,6 +104,26 @@ const verify = (premiseStrs, conclusionStr, proofText, opts) => {
 
   const fail = (L, msg) => ({ valid: false, line: L.num, message: msg });
 
+  // First-order side condition: a name used by ∀I / ∃E must not appear in
+  // any premise or in any assumption that is still open at line L.
+  const freshCheck = (name, L) => {
+    for (const pl of lines) {
+      if (pl.rule === "PR" && Formula.freeNames(pl.formula).has(name)) {
+        return `appears in the premise on line ${pl.num}`;
+      }
+    }
+    const chain = Proof.ancestorChain(lineScope[L.num]);
+    for (const s of chain) {
+      if (!s.isRoot && s.startNum != null) {
+        const as = lines[s.startNum - 1];
+        if (Formula.freeNames(as.formula).has(name)) {
+          return `appears in the assumption on line ${as.num}, which is still open here`;
+        }
+      }
+    }
+    return null;
+  };
+
   for (const L of lines) {
     const cur = L.formula;
     const refs = L.refs;
@@ -339,6 +359,139 @@ const verify = (premiseStrs, conclusionStr, proofText, opts) => {
         const reverse = Formula.equal(cur.left, bi.right) && Formula.equal(cur.right, bi.left);
         if (!forward && !reverse) {
           return fail(L, `↔E: the conditional must be (φ → ψ) or (ψ → φ) from line ${refs[0].n}.`);
+        }
+        break;
+      }
+
+      case "∀E": {
+        if (!opts.fol) return fail(L, "∀E is a first-order rule; switch to First-Order mode to use it.");
+        const e = refShape(refs, ["line"], "∀E");
+        if (e) return fail(L, e);
+        const a = accessLine(refs[0].n, L);
+        if (!a.ok) return fail(L, a.msg);
+        const src = a.line.formula;
+        if (src.type !== "forall") {
+          return fail(L, `∀E: line ${refs[0].n} must have ∀ as its outermost operator (∀x φ).`);
+        }
+        const m = Formula.matchSubst(src.sub, cur, src.v);
+        if (!m.ok) {
+          if (m.captured) {
+            return fail(L, `∀E: the substituted term contains "${Formula.prettyName(m.captured)}", which would become bound. Rename the term or the quantified variable.`);
+          }
+          return fail(L, `∀E: this line must be line ${refs[0].n}'s body with every free "${Formula.prettyName(src.v)}" replaced by one term.`);
+        }
+        break;
+      }
+
+      case "∀I": {
+        if (!opts.fol) return fail(L, "∀I is a first-order rule; switch to First-Order mode to use it.");
+        const e = refShape(refs, ["line"], "∀I");
+        if (e) return fail(L, e);
+        const a = accessLine(refs[0].n, L);
+        if (!a.ok) return fail(L, a.msg);
+        if (cur.type !== "forall") return fail(L, "∀I must conclude a universal (∀x φ).");
+        const m = Formula.matchSubst(cur.sub, a.line.formula, cur.v);
+        if (!m.ok) {
+          return fail(L, `∀I: line ${refs[0].n} must equal this line's body with a name in place of "${Formula.prettyName(cur.v)}".`);
+        }
+        if (m.term) {
+          if (m.term.type !== "tvar") {
+            return fail(L, "∀I can only generalize a name (a constant or free variable), not a compound term.");
+          }
+          const c = m.term.name;
+          const pretty = Formula.prettyName(c);
+          if (Formula.freeNames(cur).has(c)) {
+            return fail(L, `∀I: every instance of "${pretty}" must be generalized, but "${pretty}" still appears in this line.`);
+          }
+          const v = freshCheck(c, L);
+          if (v) return fail(L, `∀I: the generalized name "${pretty}" ${v}.`);
+        }
+        break;
+      }
+
+      case "∃I": {
+        if (!opts.fol) return fail(L, "∃I is a first-order rule; switch to First-Order mode to use it.");
+        const e = refShape(refs, ["line"], "∃I");
+        if (e) return fail(L, e);
+        const a = accessLine(refs[0].n, L);
+        if (!a.ok) return fail(L, a.msg);
+        if (cur.type !== "exists") return fail(L, "∃I must conclude an existential (∃x φ).");
+        const m = Formula.matchSubst(cur.sub, a.line.formula, cur.v);
+        if (!m.ok) {
+          return fail(L, `∃I: line ${refs[0].n} must equal this line's body with one term in place of "${Formula.prettyName(cur.v)}".`);
+        }
+        break;
+      }
+
+      case "∃E": {
+        if (!opts.fol) return fail(L, "∃E is a first-order rule; switch to First-Order mode to use it.");
+        const e = refShape(refs, ["line", "range"], "∃E");
+        if (e) return fail(L, e);
+        const di = accessLine(refs[0].n, L);
+        if (!di.ok) return fail(L, di.msg);
+        const ex = di.line.formula;
+        if (ex.type !== "exists") {
+          return fail(L, `∃E: line ${refs[0].n} must have ∃ as its outermost operator (∃x φ).`);
+        }
+        const sp = accessRange(refs[1].start, refs[1].end, L);
+        if (!sp.ok) return fail(L, sp.msg);
+        if (!Formula.equal(cur, sp.conclusion)) {
+          return fail(L, "∃E: this line must equal the subproof's conclusion.");
+        }
+        const m = Formula.matchSubst(ex.sub, sp.assumption, ex.v);
+        if (!m.ok) {
+          return fail(L, `∃E: the subproof's assumption must be line ${refs[0].n}'s body with a fresh name in place of "${Formula.prettyName(ex.v)}".`);
+        }
+        if (m.term) {
+          if (m.term.type !== "tvar") {
+            return fail(L, "∃E: the witness must be a name (a constant or free variable), not a compound term.");
+          }
+          const c = m.term.name;
+          const pretty = Formula.prettyName(c);
+          if (Formula.freeNames(ex).has(c)) {
+            return fail(L, `∃E: the witness "${pretty}" must not appear in line ${refs[0].n}.`);
+          }
+          if (Formula.freeNames(cur).has(c)) {
+            return fail(L, `∃E: the witness "${pretty}" must not appear in the conclusion.`);
+          }
+          const v = freshCheck(c, L);
+          if (v) return fail(L, `∃E: the witness "${pretty}" ${v}.`);
+        }
+        break;
+      }
+
+      case "=I": {
+        if (!opts.fol) return fail(L, "=I is a first-order rule; switch to First-Order mode to use it.");
+        const e = refShape(refs, [], "=I");
+        if (e) return fail(L, e);
+        if (!(cur.type === "rel" && cur.op === "=")) {
+          return fail(L, "=I must conclude an identity t = t.");
+        }
+        if (!Formula.termEqual(cur.left, cur.right)) {
+          return fail(L, "=I requires both sides of the identity to be the same term.");
+        }
+        break;
+      }
+
+      case "=E": {
+        if (!opts.fol) return fail(L, "=E is a first-order rule; switch to First-Order mode to use it.");
+        const e = refShape(refs, ["line", "line"], "=E");
+        if (e) return fail(L, e);
+        const a = accessLine(refs[0].n, L);
+        if (!a.ok) return fail(L, a.msg);
+        const b = accessLine(refs[1].n, L);
+        if (!b.ok) return fail(L, b.msg);
+        const eq = a.line.formula;
+        if (!(eq.type === "rel" && eq.op === "=")) {
+          return fail(L, `=E: line ${refs[0].n} must be an identity t = u.`);
+        }
+        const ltr = Formula.eqReplaceCheck(b.line.formula, cur, eq.left, eq.right);
+        const rtl = Formula.eqReplaceCheck(b.line.formula, cur, eq.right, eq.left);
+        if (!ltr && !rtl) {
+          return fail(
+            L,
+            `=E: this line must be line ${refs[1].n} with some instances of "${Formula.termToStr(eq.left)}" and "${Formula.termToStr(eq.right)}" swapped using line ${refs[0].n}.`
+          );
         }
         break;
       }

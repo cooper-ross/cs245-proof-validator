@@ -20,6 +20,22 @@ const REPLACERS = [
   ["\\to", "→"],
   ["\\bot", "⊥"],
   ["\\top", "⊥"],
+  ["\\forall", "∀"],
+  ["\\exists", "∃"],
+  ["\\leq", "≤"],
+  ["\\geq", "≥"],
+  ["\\neq", "≠"],
+  ["\\times", "×"],
+  ["\\cdot", "×"],
+  ["\\phi", "φ"],
+  ["\\varphi", "φ"],
+  ["\\psi", "ψ"],
+  ["\\chi", "χ"],
+  ["\\theta", "θ"],
+  ["\\alpha", "α"],
+  ["\\beta", "β"],
+  ["\\gamma", "γ"],
+  ["\\delta", "δ"],
   ["<->", "↔"],
   ["<=>", "↔"],
   ["->", "→"],
@@ -42,6 +58,10 @@ const liveTransform = (value, caret) => {
         hit = pair;
         break;
       }
+    }
+    // Lone "*" → ×, but keep "/*" for partial substitution φ[t/*x].
+    if (!hit && value[i] === "*" && value[i - 1] !== "/") {
+      hit = ["*", "×"];
     }
     if (hit) {
       out += hit[1];
@@ -117,7 +137,10 @@ const moveFocus = (i, field, caret) => {
 
 const updateLatexPreview = () => {
   if (!latexPreviewEl || !Latex) return;
-  Latex.renderPreview(latexPreviewEl, latexSourceEl, rows, INDENT);
+  const expandEl = $("expand-macros");
+  Latex.renderPreview(latexPreviewEl, latexSourceEl, rows, INDENT, {
+    expandMacros: !!(expandEl && expandEl.checked),
+  });
 };
 
 const computeEditorBoxes = () => {
@@ -392,10 +415,34 @@ const handlePaste = (e) => {
   render();
 };
 
+let mode = "pl";
+try {
+  mode = localStorage.getItem("cs245-mode") || "pl";
+} catch (e) {}
+
+const modeButtons = document.querySelectorAll("#mode-toggle button");
+const setMode = (m) => {
+  mode = m;
+  try {
+    localStorage.setItem("cs245-mode", m);
+  } catch (e) {}
+  modeButtons.forEach((b) => b.classList.toggle("active", b.dataset.mode === m));
+};
+modeButtons.forEach((b) =>
+  b.addEventListener("click", () => {
+    setMode(b.dataset.mode);
+    clearErrors();
+    resultEl.className = "result";
+    resultEl.textContent = "";
+  })
+);
+setMode(mode);
+
 $("check").addEventListener("click", () => {
   const res = Validator.verify([], "", rowsToText(), {
     implicitPremises: true,
     implicitConclusion: true,
+    fol: mode === "fol",
   });
   showResult(res);
 });
@@ -419,6 +466,19 @@ copyLatexBtn.addEventListener("click", async () => {
     }, 1500);
   }
 });
+
+const expandMacrosEl = $("expand-macros");
+if (expandMacrosEl) {
+  try {
+    expandMacrosEl.checked = localStorage.getItem("cs245-expand-macros") === "1";
+  } catch (e) {}
+  expandMacrosEl.addEventListener("change", () => {
+    try {
+      localStorage.setItem("cs245-expand-macros", expandMacrosEl.checked ? "1" : "0");
+    } catch (e) {}
+    updateLatexPreview();
+  });
+}
 
 editorEl.addEventListener("paste", handlePaste);
 

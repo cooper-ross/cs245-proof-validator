@@ -6,36 +6,100 @@ const OP_LATEX = {
   "↔": "\\leftrightarrow",
 };
 
+const REL_LATEX = {
+  "=": "=",
+  "≤": "\\le",
+  "<": "<",
+  "≥": "\\ge",
+  ">": ">",
+};
+
+const latexName = (name) => {
+  const m = /^([A-Za-z]+)(?:_(\d+))?$/.exec(name);
+  if (!m) return name; // numerals and symbols pass through
+  const base = m[1].length > 1 ? `\\mathit{${m[1]}}` : m[1];
+  return m[2] ? `${base}_{${m[2]}}` : base;
+};
+
+const TERM_INFIX_LATEX = { "+": "+", "×": "\\times" };
+
+const termToLatex = (t) => {
+  if (t.type === "tvar") return latexName(t.name);
+  if (TERM_INFIX_LATEX[t.name] && t.args.length === 2) {
+    return `(${termToLatex(t.args[0])} ${TERM_INFIX_LATEX[t.name]} ${termToLatex(t.args[1])})`;
+  }
+  return `${latexName(t.name)}(${t.args.map(termToLatex).join(", ")})`;
+};
+
 const astToLatex = (ast) => {
   if (!ast) return "";
   switch (ast.type) {
     case "var":
-      return ast.name;
+      return latexName(ast.name);
     case "bot":
       return "\\bot";
     case "neg": {
       const sub = astToLatex(ast.sub);
-      const wrap = ast.sub.type === "bin" ? `\\left(${sub}\\right)` : sub;
+      const wrap =
+        ast.sub.type === "bin" || ast.sub.type === "rel"
+          ? `\\left(${sub}\\right)`
+          : sub;
       return `\\lnot ${wrap}`;
     }
     case "bin": {
       const op = OP_LATEX[ast.op] || ast.op;
       const left = astToLatex(ast.left);
       const right = astToLatex(ast.right);
-      const l = ast.left.type === "bin" ? `\\left(${left}\\right)` : left;
-      const r = ast.right.type === "bin" ? `\\left(${right}\\right)` : right;
+      const wrapTypes = ["bin", "rel"];
+      const l = wrapTypes.indexOf(ast.left.type) !== -1 ? `\\left(${left}\\right)` : left;
+      const r = wrapTypes.indexOf(ast.right.type) !== -1 ? `\\left(${right}\\right)` : right;
       return `${l} \\, ${op} \\, ${r}`;
+    }
+    case "pred":
+      return `${latexName(ast.name)}(${ast.args.map(termToLatex).join(", ")})`;
+    case "rel": {
+      const op = REL_LATEX[ast.op] || ast.op;
+      return `${termToLatex(ast.left)} ${op} ${termToLatex(ast.right)}`;
+    }
+    case "forall":
+    case "exists": {
+      const q = ast.type === "forall" ? "\\forall" : "\\exists";
+      const sub = astToLatex(ast.sub);
+      const wrap =
+        ast.sub.type === "bin" || ast.sub.type === "rel"
+          ? `\\left(${sub}\\right)`
+          : sub;
+      return `${q} ${latexName(ast.v)} \\, ${wrap}`;
+    }
+    case "schema":
+      return ast.name;
+    case "macro":
+      return `${latexName(ast.name)}(${ast.args.map(termToLatex).join(", ")})`;
+    case "subst": {
+      const body = astToLatex(ast.formula);
+      const wrap =
+        ast.formula.type === "bin" ||
+        ast.formula.type === "rel" ||
+        ast.formula.type === "forall" ||
+        ast.formula.type === "exists"
+          ? `\\left(${body}\\right)`
+          : body;
+      if (ast.partial) {
+        return `${wrap}[${termToLatex(ast.from)}/{*} ${termToLatex(ast.to)}]`;
+      }
+      return `${wrap}[${termToLatex(ast.from)}/${termToLatex(ast.to)}]`;
     }
   }
   return "";
 };
 
-const formulaToLatex = (str) => {
+const formulaToLatex = (str, opts) => {
   const s = (str || "").trim();
   if (!s) return "";
   const r = Formula.tryParse(s);
   if (r.error) return s.replace(/_/g, "\\_");
-  return astToLatex(r.ast);
+  const ast = opts && opts.expandMacros ? Formula.expandAst(r.ast) : r.ast;
+  return astToLatex(ast);
 };
 
 const ruleToLatex = (rule) => {
@@ -73,7 +137,7 @@ const computeBoxes = (rows) => {
   return boxes;
 };
 
-const proofToLatex = (rows) => {
+const proofToLatex = (rows, opts) => {
   const lines = [
     "% needs \\usepackage{amsmath} in your preamble",
     "\\begin{align*}",
@@ -81,7 +145,7 @@ const proofToLatex = (rows) => {
   rows.forEach((row, i) => {
     const num = i + 1;
     const pad = row.depth ? `\\quad `.repeat(row.depth) : "";
-    const phi = formulaToLatex(row.formula) || "\\phantom{.}";
+    const phi = formulaToLatex(row.formula, opts) || "\\phantom{.}";
     const rule = row.startsBox ? "\\text{AS}" : ruleToLatex(row.rule);
     lines.push(`\\text{${num}.}\\ ${pad}${phi} && ${rule} \\\\`);
   });
@@ -138,7 +202,8 @@ const drawPreviewBrackets = (previewEl, indentPx) => {
   });
 };
 
-const renderPreview = (previewEl, sourceEl, rows, indentPx) => {
+const renderPreview = (previewEl, sourceEl, rows, indentPx, opts) => {
+  opts = opts || {};
   previewEl.innerHTML = "";
   rows.forEach((row, i) => {
     const line = document.createElement("div");
@@ -158,7 +223,7 @@ const renderPreview = (previewEl, sourceEl, rows, indentPx) => {
 
     const phi = document.createElement("div");
     phi.className = "lp-formula";
-    renderMath(phi, formulaToLatex(row.formula), false);
+    renderMath(phi, formulaToLatex(row.formula, opts), false);
     line.appendChild(phi);
 
     const rule = document.createElement("div");
@@ -170,7 +235,7 @@ const renderPreview = (previewEl, sourceEl, rows, indentPx) => {
     previewEl.appendChild(line);
   });
 
-  if (sourceEl) sourceEl.textContent = proofToLatex(rows);
+  if (sourceEl) sourceEl.textContent = proofToLatex(rows, opts);
 
   requestAnimationFrame(() => drawPreviewBrackets(previewEl, indentPx));
 };

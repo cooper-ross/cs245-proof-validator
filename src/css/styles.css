@@ -70,6 +70,32 @@ h1 {
   background: #fafafa;
 }
 
+.mode-toggle {
+  display: inline-flex;
+  margin-bottom: 0.6rem;
+  border: 1px solid #888;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mode-toggle button {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 0;
+  background: #f2f2f2;
+  cursor: pointer;
+}
+
+.mode-toggle button + button {
+  border-left: 1px solid #888;
+}
+
+.mode-toggle button.active {
+  background: #1a1a1a;
+  color: #fff;
+}
+
 .prow,
 .lp-row {
   display: flex;
@@ -261,11 +287,34 @@ code {
   border-top: 1px solid #ddd;
 }
 
+.latex-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
 .latex-section h2 {
   font-size: 1rem;
   font-weight: 600;
-  margin: 0 0 0.5rem;
+  margin: 0;
   color: #444;
+}
+
+.macro-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+.macro-toggle input {
+  margin: 0;
+  cursor: pointer;
 }
 
 .lp-formula .katex { font-size: 1.05em; }

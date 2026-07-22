@@ -11,7 +11,12 @@
   <body>
     <h1>CS245 Proof Validator</h1>
     <p class="sub">Based on the natural deduction system outlined in <a href="https://cs.uwaterloo.ca/~eblais/cs245e/f25/pl-formalproofs">CS245</a>. Try pasting a proof! Controls on <a href="https://github.com/cooper-ross/cs245-proof-validator">Github</a>.</p>
-    
+
+    <div id="mode-toggle" class="mode-toggle" role="group" aria-label="Proof system">
+      <button type="button" data-mode="pl" title="Propositional natural deduction (lectures 5-6)">Propositional</button>
+      <button type="button" data-mode="fol" title="Adds ∀I ∀E ∃I ∃E =I =E (lecture 12)">First-Order</button>
+    </div>
+
     <div id="editor" class="editor"></div>
 
     <div class="actions"> <button id="check">Check proof</button></div>
@@ -19,7 +24,13 @@
     <div id="result" class="result"></div>
 
     <section class="latex-section">
-      <h2>LaTeX preview</h2>
+      <div class="latex-header">
+        <h2>LaTeX preview</h2>
+        <label class="macro-toggle" title="Show Least(w), Prime(n), … as written, or expand them to their definitions">
+          <input type="checkbox" id="expand-macros" />
+          Expand macros
+        </label>
+      </div>
       <div id="latex-preview" class="latex-preview"></div>
       <button id="copy-latex" type="button">Copy LaTeX source</button>
       <pre id="latex-source" class="latex-source" hidden></pre>

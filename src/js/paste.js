@@ -14,6 +14,23 @@ const LATEX_OPS = [
   ["\\lnot", "¬"],
   ["\\neg", "¬"],
   ["\\bot", "⊥"],
+  ["\\forall", "∀"],
+  ["\\exists", "∃"],
+  ["\\leq", "≤"],
+  ["\\le", "≤"],
+  ["\\geq", "≥"],
+  ["\\ge", "≥"],
+  ["\\neq", "≠"],
+  ["\\ne", "≠"],
+  ["\\times", "×"],
+  ["\\cdot", "×"],
+  ["\\phi", "φ"],
+  ["\\varphi", "φ"],
+  ["\\psi", "ψ"],
+  ["\\chi", "χ"],
+  ["\\theta", "θ"],
+  ["\\mathit", ""],
+  ["\\approx", "="],
 ];
 
 const pasteEmptyRow = () => ({ formula: "", rule: "", depth: 0, startsBox: false });

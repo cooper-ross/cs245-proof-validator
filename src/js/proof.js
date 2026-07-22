@@ -1,6 +1,4 @@
-const RULE_RE = new RegExp(
-  "\\s+(PR|AS|RAA|R|∧I|∧E|∨I|∨E|⊥E|¬E|¬I|→E|→I|↔I|↔E)(\\s+[\\d,\\s\\-–]+)?\\s*$"
-);
+const RULE_RE = new RegExp("\\s+(PR|AS|RAA|R|∧I|∧E|∨I|∨E|⊥E|¬E|¬I|→E|→I|↔I|↔E|∀I|∀E|∃I|∃E|=I|=E)(\\s+[\\d,\\s\\-–]+)?\\s*$");
 
 const parseRefs = (refsStr) => {
   if (!refsStr) return [];
@@ -71,7 +69,8 @@ const parseProofText = (text) => {
       num,
       indent,
       formulaStr,
-      formula: parsed.ast,
+      // Expand macros (Least, Prime, …) so quantifier rules see the real form.
+      formula: Formula.expandAst(parsed.ast),
       rule,
       refs,
       index: lines.length,
