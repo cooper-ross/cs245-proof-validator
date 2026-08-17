@@ -17,7 +17,8 @@ Two proof systems are supported, switched with the toggle above the editor:
 | Begin subproof (assumption) | `Tab` on a line after the first |
 | End subproof / dedent | `Shift+Tab` |
 | Delete empty line | `Backspace` on an empty formula field |
-| Move between lines | `↑` / `↓` in a formula field |
+| Move between fields | `→` at the end of a formula field; `←` at the start of a rule field |
+| Move between lines | `↑` / `↓` in a formula or rule field |
 
 Each row has a formula field and a rule field. The first line’s rule is typically `PR` (premise). Starting a subproof sets the rule to `AS` automatically.
 
