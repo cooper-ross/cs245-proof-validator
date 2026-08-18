@@ -22,6 +22,8 @@ const normalizeOps = (s) => {
     .replace(/!=/g, "≠")
     .replace(/<=/g, "≤")
     .replace(/>=/g, "≥")
+    // Lecture notation φ[x:=t] is the same substitution as the notes' φ[x/t].
+    .replace(/:=/g, "/")
     .replace(/->/g, "→")
     .replace(/=>/g, "→")
     .replace(/≈/g, "=")
@@ -142,15 +144,16 @@ const expandMacro = (name, args) => {
   if (key === "prime" && args.length === 1) {
     const t = args[0];
     const avoid = termNames(t);
-    const x = freshVar(avoid);
-    const y = freshVar(new Set([...avoid, x]));
-    // Prime(t) := t≠0 ∧ t≠1 ∧ ∀x∀y(x×y=t → (x=1 ∨ y=1))
-    const ne0 = neg(rel("=", t, tvar("0")));
-    const ne1 = neg(rel("=", t, tvar("1")));
-    const prod = rel("=", func("×", [tvar(x), tvar(y)]), t);
-    const factors = bin("∨", rel("=", tvar(x), tvar("1")), rel("=", tvar(y), tvar("1")));
-    const body = bin("→", prod, factors);
-    return bin("∧", bin("∧", ne0, ne1), forall(x, forall(y, body)));
+    // Prime(t) := ((t > 1) ∧ ∀y∀z((y×z = t) → (y=1 ∨ z=1)))
+    // (the definition from lecture). The bound variables stay y and z unless
+    // the argument contains them, in which case they are renamed fresh.
+    const prefer = (name, taken) => (taken.has(name) ? freshVar(taken) : name);
+    const y = prefer("y", avoid);
+    const z = prefer("z", new Set([...avoid, y]));
+    const gt1 = rel(">", t, tvar("1"));
+    const prod = rel("=", func("×", [tvar(y), tvar(z)]), t);
+    const factors = bin("∨", rel("=", tvar(y), tvar("1")), rel("=", tvar(z), tvar("1")));
+    return bin("∧", gt1, forall(y, forall(z, bin("→", prod, factors))));
   }
   if (key === "even" && args.length === 1) {
     const t = args[0];
@@ -257,12 +260,12 @@ const parse = (input) => {
     return { type: "rel", op, left, right };
   };
 
-  // Postfix [x/t] (full) or [t/*x] (partial) substitutions.
+  // Postfix [x/t] (full, also written [x:=t]) or [t/*x] (partial) substitutions.
   const applySubsts = (base) => {
     while (peek() && peek().t === "[") {
       pos++;
       const left = parseTermExpr();
-      if (!peek() || peek().t !== "/") throw { msg: 'Expected "/" in substitution' };
+      if (!peek() || peek().t !== "/") throw { msg: 'Expected "/" or ":=" in substitution' };
       pos++;
       if (peek() && peek().t === "*") {
         pos++;

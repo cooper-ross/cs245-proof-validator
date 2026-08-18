@@ -48,17 +48,17 @@ Arithmetic-style terms work too: numerals are constants and `+` / `×` are infix
 
 ### Schemas, substitution, and macros
 
-Greek letters (`φ`, `ψ`, `χ`, `θ`, … — including the fancy italic forms from the notes) are schema formulas, so schematic proofs paste and verify directly:
+Greek letters (`φ`, `ψ`, `χ`, `θ`, … - including the fancy italic forms from the notes) are schema formulas, so schematic proofs paste and verify directly:
 
 ```
 ¬∀x φ ⊢ ∃x ¬φ
 ```
 
-Substitution notation from the notes is supported:
+Substitution notation from both the notes and the lectures is supported:
 
 | Notation | Meaning |
 |----------|---------|
-| `φ[x/t]` | replace every free `x` in `φ` with term `t` |
+| `φ[x/t]` or `φ[x:=t]` | replace every free `x` in `φ` with term `t` (the two spellings are interchangeable) |
 | `φ[t/*x]` | replace some instances of term `t` with `x` (used by `∃I`) |
 
 Brackets attach tightly, so `¬φ[x/a]` is `¬(φ[x/a])`.
@@ -69,17 +69,21 @@ These course macros are kept as shorthands in the editor and LaTeX preview (togg
 |-------|------------|
 | `Least(w)` | `∀x (w ≤ x)` |
 | `Greatest(w)` | `∀x (x ≤ w)` |
-| `Prime(n)` / `prime(n)` | `n≠0 ∧ n≠1 ∧ ∀x∀y(x×y=n → (x=1 ∨ y=1))` |
+| `Prime(n)` / `prime(n)` | `(n > 1) ∧ ∀y∀z((y×z = n) → (y=1 ∨ z=1))` |
 | `Even(n)` | `∃k (n = 2×k)` |
 | `Odd(n)` | `∃k (n = 2×k+1)` |
 
-The bound variable in `Least`/`Greatest` is chosen fresh relative to the argument, so `Least(x)` becomes `∀y (x ≤ y)`.
+Substituting into a definition is capture-avoiding: bound variables are renamed when the argument would collide with them so `Least(x)` becomes `∀y (x ≤ y)`, and `Prime(y)` renames the first bound variable rather than producing a formula where `y` is accidentally captured.
 
 ## Rules
 
 Supported rules: `PR`, `AS`, `R`, `∧I` `∧E`, `∨I` `∨E`, `¬I` `¬E`, `→I` `→E`, `↔I` `↔E`, `⊥E`, `RAA`.
 
-First-order mode adds: `∀I` `∀E`, `∃I` `∃E`, `=I` `=E`. The side conditions from the notes are enforced — e.g. `∀I` and `∃E` require the generalized name / witness to be fresh (not in any premise or open assumption), and `∀E` rejects substitutions where a variable in the term would be captured by a quantifier.
+First-order mode adds: `∀I` `∀E`, `∃I` `∃E`, `=I` `=E`. The side conditions enforced are the corrected ones from lectures, which fix a couple of slight mis-specifications in the notes:
+
+- `∀I` and `∃E`: the generalized name / witness must be fresh - not only absent from the cited formulas, but also from every premise and every assumption that is still undischarged at that line (the notes' `∃E` only mentions φ and ψ).
+- `∀E`: substitutions where a variable of the term would become bound (captured) by a quantifier are rejected.
+- `=E`: given `t = u`, only *free* occurrences may be swapped - an occurrence isn't rewritten if any variable of `t` or `u` is bound at that position (the notes' `φ[t/*u]` phrasing would allow unsound replacements inside quantifiers). Equivalently: from `t = u` and `φ[x:=t]` (where the substitution causes no naming collisions) you may conclude `φ[x:=u]`.
 
 Citations go in the rule field after the rule name, e.g. `→E 1, 3` or `→I 3-5` (subproof ranges use a hyphen). `∃E` cites the existential line and the subproof, e.g. `∃E 2, 3-5`. Premises are inferred from `PR` lines, and the conclusion is taken from the last line.
 
