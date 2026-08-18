@@ -261,6 +261,14 @@ const wireFormula = (input, i) => {
       e.preventDefault();
       moveFocus(i + 1, "formula", rows[i + 1].formula.length);
       restoreFocus();
+    } else if (
+      e.key === "ArrowRight" &&
+      input.selectionStart === input.value.length &&
+      input.selectionEnd === input.value.length
+    ) {
+      e.preventDefault();
+      moveFocus(i, "rule", rows[i].rule.length);
+      restoreFocus();
     }
   });
 };
@@ -292,6 +300,22 @@ const wireRule = (input, i) => {
       e.preventDefault();
       dedentRow(i);
       render();
+    } else if (e.key === "ArrowUp" && i > 0) {
+      e.preventDefault();
+      moveFocus(i - 1, "rule", rows[i - 1].rule.length);
+      restoreFocus();
+    } else if (e.key === "ArrowDown" && i < rows.length - 1) {
+      e.preventDefault();
+      moveFocus(i + 1, "rule", rows[i + 1].rule.length);
+      restoreFocus();
+    } else if (
+      e.key === "ArrowLeft" &&
+      input.selectionStart === 0 &&
+      input.selectionEnd === 0
+    ) {
+      e.preventDefault();
+      moveFocus(i, "formula", rows[i].formula.length);
+      restoreFocus();
     }
   });
 };
